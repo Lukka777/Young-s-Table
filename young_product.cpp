@@ -106,8 +106,8 @@ bool can_add_box(const Tableau& T, int N, int rowIndex, int label) {
 }
 
 // ---------- Рекурсивне додавання k клітин з однією міткою ----------
-void add_boxes_label(const Tableau& T, int N, int label, int remaining,
-                     vector<Tableau>& out) {
+void add_boxes_label_rec(const Tableau& T, int N, int label, int remaining,
+                         int minRow, vector<Tableau>& out) {
     if (remaining == 0) {
         out.push_back(T);
         return;
@@ -115,8 +115,8 @@ void add_boxes_label(const Tableau& T, int N, int label, int remaining,
 
     int numRows = (int)T.rowLen.size();
 
-    // можемо додавати в будь-який існуючий рядок або створити новий внизу
-    for (int r = 0; r <= numRows; ++r) {
+    // додаємо лише в рядки з iндексом >= minRow
+    for (int r = minRow; r <= numRows; ++r) {
         if (!can_add_box(T, N, r, label)) continue;
 
         Tableau T2 = T;
@@ -128,8 +128,17 @@ void add_boxes_label(const Tableau& T, int N, int label, int remaining,
             T2.rowLen[r]++;
             T2.labels[r].push_back(label);
         }
-        add_boxes_label(T2, N, label, remaining - 1, out);
+
+        // наступну клiтину з тим самим label можна ставити
+        // лише в рядок r або нижче, щоб не було перестановок
+        add_boxes_label_rec(T2, N, label, remaining - 1, r, out);
     }
+}
+
+//обгортка, щоб не змiнювати main
+void add_boxes_label(const Tableau& T, int N, int label, int remaining,
+                     vector<Tableau>& out) {
+    add_boxes_label_rec(T, N, label, remaining, 0, out);
 }
 
 // ---------- Умова Яманоучі (балотна) для послідовності міток ----------
